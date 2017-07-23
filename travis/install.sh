@@ -13,14 +13,17 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
         py34)
             # Install some custom Python 3.4 requirements on OS X
             pip install pip -U
+            python setup.py install
             ;;
         py35)
             # Install some custom Python 3.5 requirements on OS X
             pip install pip -U
+            python setup.py install
             ;;
         py36)
             # Install some custom Python 3.6 requirements on OS X
             pip install pip -U
+            python setup.py install
             ;;
     esac
 else
