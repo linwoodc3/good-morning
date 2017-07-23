@@ -20,16 +20,18 @@
 """Module for downloading financial data from financials.morningstar.com.
 """
 
-from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import with_statement
+
 import csv
 import json
-import numpy as np
-import pandas as pd
 import re
 import urllib.request
-from bs4 import BeautifulSoup, Tag
 from datetime import date
+
+import numpy as np
+import pandas as pd
+from bs4 import BeautifulSoup
 
 
 class KeyRatiosDownloader(object):
@@ -279,6 +281,9 @@ class FinancialsDownloader(object):
         financials for the given Morningstar ticker.
         """
         result = {}
+        if len(ticker) == 0:
+            raise ValueError("You did not enter a ticker symbol.  Please"
+                             " try again.")
         for report_type, table_name in [
             (u'is', u'income_statement'),
             (u'bs', u'balance_sheet'),
@@ -311,6 +316,10 @@ class FinancialsDownloader(object):
                r'&dataType=A&order=asc&columnYear=5&rounding=3&view=raw')
         with urllib.request.urlopen(url) as response:
             json_text = response.read().decode(u'utf-8')
+            if len(json_text)==0:
+                raise ValueError("MorningStar cannot find the ticker symbol "
+                                 "you entered or it is INVALID. Please try "
+                                 "again.")
             json_data = json.loads(json_text)
             result_soup = BeautifulSoup(json_data[u'result'], u'html.parser')
             return self._parse(result_soup)
