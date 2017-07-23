@@ -28,6 +28,7 @@ install:
     - source travis/install.sh
     - 'pip install pip -U'
     - "pip install pytest-cov"
+    - "python setup.py -q install"
 script:
   - py.test --cov=./
 
