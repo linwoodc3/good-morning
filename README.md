@@ -13,16 +13,16 @@ Motivation
 
 Good Morning is intended to be used as an extension to [QSToolKit (QSTK)](http://wiki.quantsoftware.org/index.php?title=QuantSoftware_ToolKit) library. By using [QSTK](http://wiki.quantsoftware.org/index.php?title=QuantSoftware_ToolKit) you can easily download historical stock market data from [Yahoo Finance](http://finance.yahoo.com/). You can also download fundamental financial data from [Compustat](https://www.capitaliq.com/home/what-we-offer/information-you-need/financials-valuation/compustat-financials.aspx). However, most individuals and institutions do not have access to [Compustat](https://www.capitaliq.com/home/what-we-offer/information-you-need/financials-valuation/compustat-financials.aspx). Good Morning attempts to mitigate this limitation by providing a very simple Python interface for downloading fundamental financial data from [financials.morningstar.com](http://financials.morningstar.com/).
 
-Example
+Example of Downloading Key Ratios from MorningStar
 =======
 
-    import good_morning as gm
+    import morningstar as gm
     kr = gm.KeyRatiosDownloader()
     kr_frames = kr.download('AAPL')
 
 The variable `kr_frames` now holds an array of [`pandas.DataFrame`](http://pandas.pydata.org/pandas-docs/dev/generated/pandas.DataFrame.html)s containing the key ratios for the morningstar ticker [`AAPL`](http://financials.morningstar.com/ratios/r.html?t=AAPL&region=usa&culture=en-US).
 
-    print kr_frames[0]
+    print (kr_frames[0])
 
 Outputs:
 
@@ -42,6 +42,24 @@ If we specify the MySQL connection `conn` the retrieved data will be uploaded to
     conn = pymysql.connect(
         host = DB_HOST, user = DB_USER, passwd = DB_PASS, db = DB_NAME)
     kr_frames = kr.download('AAPL', conn)
+
+
+Example of Downloading Financials (e.g. *income statement, balance sheet, cash flow*) from MorningStar 
+=======
+
+    import morningstar as gm
+    kr = gm.FinancialsDownloader()
+    kr_fins = kr.download('AAPL')
+    
+Different from the `KeyRatiosDownloader` class,  `kr_fins` now holds a dictionary containing the financials for the morningstar ticker [`AAPL`](http://financials.morningstar.com/ratios/r.html?t=AAPL&region=usa&culture=en-US). The financials **may differ** from company to company.
+
+    print (fins.keys())
+    
+Output:
+
+    dict_keys(['income_statement', 'balance_sheet', 'cash_flow', 'period_range', 'fiscal_year_end', 'currency'])
+
+
 
 Every [`pandas.DataFrame`](http://pandas.pydata.org/pandas-docs/dev/generated/pandas.DataFrame.html) in the array `kr_frames` will be uploaded to a different database table. In our case the following tables will be created: 
 
