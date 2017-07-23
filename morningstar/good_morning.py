@@ -23,11 +23,9 @@
 from __future__ import with_statement
 from __future__ import absolute_import
 import csv
-import http.client
 import json
 import numpy as np
 import pandas as pd
-import pymysql
 import re
 import urllib.request
 from bs4 import BeautifulSoup, Tag
