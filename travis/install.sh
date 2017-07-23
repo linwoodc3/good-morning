@@ -5,6 +5,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     # Install some custom requirements on OS X
     # e.g. brew install pyenv-virtualenv
     brew install python3
+    alias python='python3'
 
     case "${GDELT}" in
         py34)
@@ -27,6 +28,6 @@ else
     sudo apt-get update -q -y
     sudo apt-get install python-dev -y
     sudo apt-get clean	-y
-pip install numpy>=1.10
+pip install numpy -U
 pip install -r requirements.txt
 fi;
