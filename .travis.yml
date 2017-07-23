@@ -26,6 +26,7 @@ matrix:
 
 install:
     - source travis/install.sh
+    - "pip install numpy; pip install scipy; pip install pandas"
     - 'pip install pip -U'
     - "pip install pytest-cov"
     - "python setup.py install"
