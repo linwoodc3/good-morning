@@ -47,7 +47,7 @@ install:
   - "%PYTHON%/Scripts/pip.exe install pytest-cov"
   - "%PYTHON%/Scripts/pip.exe install -r requirements.txt"
 
-  - "%PYTHON%\\python.exe setup.py test"
+  - "%PYTHON%\\python.exe setup.py install"
 
 test_script:
 #  - dir
