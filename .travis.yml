@@ -1,6 +1,15 @@
 language: python
 cache: pip
 matrix:
+  include:
+    - language: generic
+      os: osx
+      before_install:
+        - brew update
+        - brew install python3
+        - virtualenv env -p python3
+        - source env/bin/activate
+matrix:
     include:
         - os: linux
           sudo: required
@@ -17,20 +26,31 @@ matrix:
         - os: osx
           language: generic
           env: GDELT=py34
+          before_install:
+            - brew update
+            - brew install python3
+            - virtualenv env -p python3
+            - source env/bin/activate
         - os: osx
           language: generic
           env: GDELT=py35
+          before_install:
+            - brew update
+            - brew install python3
+            - virtualenv env -p python3
+            - source env/bin/activate
         - os: osx
           language: generic
           env: GDELT=py36
+          before_install:
+            - brew update
+            - brew install python3
+            - virtualenv env -p python3
+            - source env/bin/activate
 
 install:
-    - which python
-    - python --version
     - "pip install numpy; pip install scipy; pip install pandas"
     - source travis/install.sh
-    - which python
-    - python --version
     - 'pip install pip -U'
     - "pip install pytest-cov"
     - "python setup.py install"
