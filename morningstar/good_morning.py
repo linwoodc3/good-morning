@@ -20,31 +20,32 @@
 """Module for downloading financial data from financials.morningstar.com.
 """
 
-from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import with_statement
+
 import csv
-import http.client
 import json
-import numpy as np
-import pandas as pd
-import pymysql
 import re
 import urllib.request
-from bs4 import BeautifulSoup, Tag
 from datetime import date
+
+import numpy as np
+import pandas as pd
+from bs4 import BeautifulSoup
+
 
 class KeyRatiosDownloader(object):
     u"""Downloads key ratios from http://financials.morningstar.com/
     """
 
-    def __init__(self, table_prefix = u'morningstar_'):
+    def __init__(self, table_prefix=u'morningstar_'):
         u"""Constructs the KeyRatiosDownloader instance.
 
         :param table_prefix: Prefix of the MySQL tables.
         """
         self._table_prefix = table_prefix
 
-    def download(self, ticker, conn = None):
+    def download(self, ticker, conn=None):
         u"""Downloads and returns key ratios for the given Morningstar ticker.
 
         Downloads and returns an array of pandas.DataFrames containing the key
@@ -56,10 +57,10 @@ class KeyRatiosDownloader(object):
         :param conn: MySQL connection.
         :return: List of pandas.DataFrames containing the key ratios.
         """
-        url = (ur'http://financials.morningstar.com/ajax/exportKR2CSV.html?' +
-               ur'&callback=?&t={0}&region=usa&culture=en-US&cur=USD'.format(
+        url = (r'http://financials.morningstar.com/ajax/exportKR2CSV.html?' +
+               r'&callback=?&t={0}&region=usa&culture=en-US&cur=USD'.format(
                    ticker))
-        with urllib2.urlopen(url) as response:
+        with urllib.request.urlopen(url) as response:
             tables = self._parse_tables(response)
             response_structure = [
                 # Original Name, New pandas.DataFrame Name
@@ -77,7 +78,18 @@ class KeyRatiosDownloader(object):
                 (u'Key Ratios -> Financial Health',
                  u'Key Liquidity/Financial Health'),
                 (u'Key Ratios -> Efficiency Ratios', u'Key Efficiency Ratios')]
+
             frames = self._parse_frames(tables, response_structure)
+
+            if len(ticker) == 0:
+                raise ValueError("You did not enter a ticker symbol.  Please"
+                                 " try again.")
+            elif frames == "MorningStar could not find the ticker":
+
+                raise ValueError("MorningStar cannot find the ticker symbol "
+                                 "you entered or it is INVALID. Please try "
+                                 "again.")
+
             currency = re.match(u'^.* ([A-Z]+) Mil$',
                                 frames[0].index[0]).group(1)
             frames[0].index.name += u' ' + currency
@@ -96,7 +108,7 @@ class KeyRatiosDownloader(object):
         """
         # Regex pattern used to recognize csv lines containing financial data.
         num_commas = 5
-        pat_commas = ur'(.*,){%d,}' % num_commas
+        pat_commas = r'(.*,){%d,}' % num_commas
         # Resulting array of pairs (table_name, table_frame).
         tables = []
         table_name = None
@@ -126,9 +138,11 @@ class KeyRatiosDownloader(object):
         :param response_structure: List of pairs (expected table name, new name
         assigned to the corresponding (processed) pandas.DataFrame).
         """
+        if len(tables) == 0:
+            return ("MorningStar could not find the ticker")
         period_start = tables[0][1].ix[0][1]
         period_month = pd.datetime.strptime(period_start, u'%Y-%m').month
-        #period_freq = pd.datetools.YearEnd(month=period_month)
+        # period_freq = pd.datetools.YearEnd(month=period_month)
         period_freq = pd.tseries.offsets.YearEnd(month=period_month)
         frames = []
         for index, (check_name, frame_name) in enumerate(response_structure):
@@ -157,7 +171,7 @@ class KeyRatiosDownloader(object):
                                                periods=len(output_frame.ix[0]),
                                                freq=period_freq)
         output_frame.columns.name = u'Period'
-        if re.match(ur'^\d{4}-\d{2}$', output_frame.ix[0][0]):
+        if re.match(r'^\d{4}-\d{2}$', output_frame.ix[0][0]):
             output_frame.drop(output_frame.index[0], inplace=True)
         output_frame.replace(u',', u'', regex=True, inplace=True)
         output_frame.replace(u'^\s*$', u'NaN', regex=True, inplace=True)
@@ -188,8 +202,8 @@ class KeyRatiosDownloader(object):
                 .replace(u'/', u' per ')
                 .replace(u'&', u' and ')
                 .replace(u'%', u' percent '))
-        name = re.sub(ur'[^a-z0-9]', u' ', name)
-        name = re.sub(ur'\s+', u' ', name).strip()
+        name = re.sub(r'[^a-z0-9]', u' ', name)
+        name = re.sub(r'\s+', u' ', name).strip()
         return name.replace(u' ', u'_')
 
     def _get_db_table_name(self, frame):
@@ -237,24 +251,24 @@ class KeyRatiosDownloader(object):
             u'REPLACE INTO `%s`\n' % self._get_db_table_name(frame) +
             u'  (%s)\nVALUES\n' % u',\n   '.join(columns) +
             u',\n'.join([u'("' + ticker + u'", "' + column.strftime(u'%Y-%m-%d') +
-                        u'", ' +
-                        u', '.join([u'NULL' if np.isnan(x) else u'%.5f' % x
-                                   for x in frame[column].values]) +
-                        u')' for column in frame.columns]))
+                         u'", ' +
+                         u', '.join([u'NULL' if np.isnan(x) else u'%.5f' % x
+                                     for x in frame[column].values]) +
+                         u')' for column in frame.columns]))
 
 
 class FinancialsDownloader(object):
     u"""Downloads financials from http://financials.morningstar.com/
     """
 
-    def __init__(self, table_prefix = u'morningstar_'):
+    def __init__(self, table_prefix=u'morningstar_'):
         u"""Constructs the FinancialsDownloader instance.
 
         :param table_prefix: Prefix of the MySQL tables.
         """
         self._table_prefix = table_prefix
 
-    def download(self, ticker, conn = None):
+    def download(self, ticker, conn=None):
         u"""Downloads and returns a dictionary containing pandas.DataFrames
         representing the financials (i.e. income statement, balance sheet,
         cash flow) for the given Morningstar ticker. If the MySQL connection
@@ -268,9 +282,9 @@ class FinancialsDownloader(object):
         """
         result = {}
         for report_type, table_name in [
-                (u'is', u'income_statement'),
-                (u'bs', u'balance_sheet'),
-                (u'cf', u'cash_flow')]:
+            (u'is', u'income_statement'),
+            (u'bs', u'balance_sheet'),
+            (u'cf', u'cash_flow')]:
             frame = self._download(ticker, report_type)
             result[table_name] = frame
             if conn:
@@ -292,15 +306,15 @@ class FinancialsDownloader(object):
         :return  pandas.DataFrame corresponding to the given Morningstar ticker
         and the given type of the report.
         """
-        url = (ur'http://financials.morningstar.com/ajax/' +
-               ur'ReportProcess4HtmlAjax.html?&t=' + ticker +
-               ur'&region=usa&culture=en-US&cur=USD' +
-               ur'&reportType=' + report_type + ur'&period=12' +
-               ur'&dataType=A&order=asc&columnYear=5&rounding=3&view=raw')
-        with urllib2.urlopen(url) as response:
+        url = (r'http://financials.morningstar.com/ajax/' +
+               r'ReportProcess4HtmlAjax.html?&t=' + ticker +
+               r'&region=usa&culture=en-US&cur=USD' +
+               r'&reportType=' + report_type + r'&period=12' +
+               r'&dataType=A&order=asc&columnYear=5&rounding=3&view=raw')
+        with urllib.request.urlopen(url) as response:
             json_text = response.read().decode(u'utf-8')
             json_data = json.loads(json_text)
-            result_soup = BeautifulSoup(json_data[u'result'],u'html.parser')
+            result_soup = BeautifulSoup(json_data[u'result'], u'html.parser')
             return self._parse(result_soup)
 
     def _parse(self, soup):
@@ -321,7 +335,7 @@ class FinancialsDownloader(object):
         self._period_range = pd.period_range(
             year.div.text, periods=len(self._year_ids),
             # freq=pd.datetools.YearEnd(month=period_month))
-            freq = pd.tseries.offsets.YearEnd(month=period_month))
+            freq=pd.tseries.offsets.YearEnd(month=period_month))
         unit = left.find(u'div', {u'id': u'unitsAndFiscalYear'})
         self._fiscal_year_end = int(unit.attrs[u'fyenumber'])
         self._currency = unit.attrs[u'currency']
@@ -334,7 +348,7 @@ class FinancialsDownloader(object):
                             columns=[u'parent_index', u'title'] + list(
                                 self._period_range))
 
-    def _read_labels(self, root_node, parent_label_index = None):
+    def _read_labels(self, root_node, parent_label_index=None):
         u"""Recursively reads labels from the parsed HTML response.
         """
         for node in root_node:
@@ -344,7 +358,7 @@ class FinancialsDownloader(object):
                     node.attrs[u'id'].startswith(u'label') and
                     not node.attrs[u'id'].endswith(u'padding') and
                     (not node.has_attr(u'style') or
-                        u'display:none' not in node.attrs[u'style'])):
+                             u'display:none' not in node.attrs[u'style'])):
                 label_id = node.attrs[u'id'][6:]
                 label_title = (node.div.attrs[u'title']
                                if node.div.has_attr(u'title')
@@ -353,8 +367,8 @@ class FinancialsDownloader(object):
                     u'id': label_id,
                     u'index': self._label_index,
                     u'parent_index': (parent_label_index
-                                     if parent_label_index is not None
-                                     else self._label_index),
+                                      if parent_label_index is not None
+                                      else self._label_index),
                     u'title': label_title})
                 self._label_index += 1
 
@@ -368,14 +382,14 @@ class FinancialsDownloader(object):
                     node.attrs[u'id'].startswith(u'data') and
                     not node.attrs[u'id'].endswith(u'padding') and
                     (not node.has_attr(u'style') or
-                        u'display:none' not in node.attrs[u'style'])):
+                             u'display:none' not in node.attrs[u'style'])):
                 data_id = node.attrs[u'id'][5:]
                 while (self._data_index < len(self._data) and
-                       self._data[self._data_index][u'id'] != data_id):
+                               self._data[self._data_index][u'id'] != data_id):
                     # In some cases we do not have data for all labels.
                     self._data_index += 1
-                assert(self._data_index < len(self._data) and
-                       self._data[self._data_index][u'id'] == data_id)
+                assert (self._data_index < len(self._data) and
+                        self._data[self._data_index][u'id'] == data_id)
                 for (i, child) in enumerate(node.children):
                     try:
                         value = float(child.attrs[u'rawvalue'])
@@ -466,13 +480,13 @@ class FinancialsDownloader(object):
             u'REPLACE INTO `%s`\n' % table_name +
             u'  (%s)\nVALUES\n' % u', '.join(columns) +
             u',\n'.join([u'("' + ticker + u'", %d, %d, "%s", ' %
-                        (index, frame.ix[index, u'parent_index'],
-                         frame.ix[index, u'title']) +
-                        u', '.join(
-                            [u'NULL' if np.isnan(frame.ix[index, period])
-                             else u'%.5f' % frame.ix[index, period]
-                             for period in frame.columns[2:]]) + u')'
-                        for index in frame.index]))
+                         (index, frame.ix[index, u'parent_index'],
+                          frame.ix[index, u'title']) +
+                         u', '.join(
+                             [u'NULL' if np.isnan(frame.ix[index, period])
+                              else u'%.5f' % frame.ix[index, period]
+                              for period in frame.columns[2:]]) + u')'
+                         for index in frame.index]))
 
 
 def _db_table_exists(table_name, conn):
