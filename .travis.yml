@@ -50,12 +50,12 @@ matrix:
 
 install:
     - "pip install numpy; pip install scipy; pip install pandas"
-    - source travis/install.sh
+    -  source travis/install.sh
     - 'pip install pip -U'
-    - "pip install pytest-cov"
+    - "pip install pytest-cov; pip install pytest"
     - "python setup.py install"
 script:
-  - python tests/test_download.py
+  - pytest tests/
 
 cache:
   directories:
