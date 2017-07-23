@@ -4,21 +4,26 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
 
     # Install some custom requirements on OS X
     # e.g. brew install pyenv-virtualenv
-    brew install python3
-    alias python='python3'
+
 
     case "${GDELT}" in
         py34)
             # Install some custom Python 3.4 requirements on OS X
             pip install pip -U
+            brew install python3
+            alias python='python3'
             ;;
         py35)
             # Install some custom Python 3.5 requirements on OS X
             pip install pip -U
+            brew install python3
+            alias python='python3'
             ;;
         py36)
             # Install some custom Python 3.6 requirements on OS X
             pip install pip -U
+            brew install python3
+            alias python='python3'
             ;;
     esac
 else
