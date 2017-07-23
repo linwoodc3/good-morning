@@ -26,5 +26,5 @@ else
     sudo apt-get update -q -y
     sudo apt-get install python-dev -y
     sudo apt-get clean	-y
-
+pip install -r requirements.txt
 fi;

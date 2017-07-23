@@ -5,7 +5,7 @@
 from unittest import TestCase
 
 from morningstar import good_morning as gm
-from morningstar.good_morning import KeyRatiosDownloader
+
 
 class TestDownloadReturns(TestCase):
     def test_downloadreturn(self):
