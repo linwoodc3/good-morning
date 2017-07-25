@@ -96,6 +96,23 @@ Where the columns are:
     free_cash_flow_per_sales_percent
     free_cash_flow_per_net_income
 
+Unit Tests
+----------
+
+We include unittest to troubleshoot your use of the library.  It's a simple command line process to run the test. Navigate to the base directory of `good-morning` and use the standard library `unittest` command line interface:
+
+    python -m unittest test/
+    
+Output:
+
+    ----------------------------------------------------------------------
+    Ran 3 tests in 0.626s
+    
+    OK
+
+If you see anything other than this, you should get an error report. Before submitting an issue, run the test and try to paste the output if the error persists.
+
+
 Available Classes
 -----------------
 
